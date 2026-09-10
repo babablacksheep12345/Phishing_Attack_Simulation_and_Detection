@@ -1,0 +1,27 @@
+# Python
+venv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Project
+models/*.pkl
+reports/
+data/simulated/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,26 @@
+[
+  {
+    "from_display": "GitHub",
+    "from_address": "noreply@github.com",
+    "subject": "Your repository has a new star",
+    "body": "Hi Shikha,\n\nSomeone starred your repository 'phishing-detection' on GitHub.\n\nView activity: https://github.com/notifications\n\nThanks,\nThe GitHub Team"
+  },
+  {
+    "from_display": "LinkedIn",
+    "from_address": "messages-noreply@linkedin.com",
+    "subject": "You have a new connection request",
+    "body": "Hi Shikha,\n\nJohn Doe wants to connect with you on LinkedIn.\n\nAccept invitation: https://www.linkedin.com/mynetwork\n\nBest,\nLinkedIn"
+  },
+  {
+    "from_display": "Amazon",
+    "from_address": "shipment-tracking@amazon.com",
+    "subject": "Your Amazon order has shipped",
+    "body": "Hello Shikha,\n\nYour order #112-8847392-1234567 has shipped and will arrive by September 15.\n\nTrack your package: https://www.amazon.com/gp/css/shiptrack\n\nThank you for shopping with us."
+  },
+  {
+    "from_display": "Google",
+    "from_address": "no-reply@accounts.google.com",
+    "subject": "Security alert: New sign-in on Windows",
+    "body": "Hi Shikha,\n\nYour Google Account shikha@gmail.com was just signed in to from a new Windows device.\n\nIf this was you, no action is needed.\n\nReview activity: https://myaccount.google.com/notifications\n\nThe Google Accounts team"
+  }
+]

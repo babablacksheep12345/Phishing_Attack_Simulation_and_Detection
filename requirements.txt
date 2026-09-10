@@ -1,0 +1,5 @@
+# Phishing Attack Simulation and Detection
+# Python 3.9+
+
+colorama>=0.4.6
+pyyaml>=6.0.1

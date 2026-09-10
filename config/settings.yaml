@@ -1,0 +1,61 @@
+# Phishing Simulation & Detection Configuration
+
+detection:
+  email:
+    phishing_threshold: 0.5
+    suspicious_keywords:
+      - urgent
+      - verify your account
+      - click here immediately
+      - suspended
+      - confirm your identity
+      - update payment
+      - act now
+      - limited time
+      - winner
+      - free gift
+      - password expired
+      - security alert
+      - unauthorized access
+    trusted_domains:
+      - gmail.com
+      - outlook.com
+      - microsoft.com
+      - google.com
+      - amazon.com
+      - paypal.com
+
+  url:
+    phishing_threshold: 0.5
+    suspicious_tlds:
+      - .xyz
+      - .top
+      - .club
+      - .work
+      - .click
+      - .link
+      - .tk
+      - .ml
+    legitimate_domains:
+      - google.com
+      - microsoft.com
+      - amazon.com
+      - paypal.com
+      - apple.com
+      - facebook.com
+      - linkedin.com
+      - github.com
+      - quickbooks.com
+      - netflix.com
+      - windows.com
+
+simulation:
+  scenarios:
+    - credential_harvest
+    - fake_invoice
+    - account_suspension
+    - prize_scam
+    - tech_support
+
+reporting:
+  output_dir: reports
