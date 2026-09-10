@@ -7,45 +7,27 @@ from urllib.parse import urlparse
 
 from src.utils.helpers import normalize_domain
 from .domain_trust import (
-    check_brand_typosquat,
-    check_edit_distance_typosquat,
+    analyze_domain,
     is_known_legitimate,
     is_suspicious_tld,
     is_trusted_tld,
+    PHISHING_PATH_KEYWORDS,
 )
 from .rules import DetectionResult
 
 
 class URLPhishingDetector:
-    """
-    Detects phishing websites using layered analysis:
-    1. Known legitimate domains (.com, .io, etc.) → safe
-    2. Strong signals (typosquat, homograph, IP URLs) → phishing
-    3. Weak signals only count when combined with strong ones
-    """
+    """Detects phishing websites using domain analysis + URL heuristics."""
 
     STRONG_WEIGHTS = {
         "brand_typosquat": 0.55,
         "edit_distance_typosquat": 0.50,
+        "brand_impersonation": 0.50,
         "homograph_attack": 0.55,
         "ip_address_url": 0.45,
         "at_symbol_redirect": 0.50,
         "suspicious_tld_with_keywords": 0.50,
     }
-
-    WEAK_WEIGHTS = {
-        "suspicious_tld": 0.15,
-        "missing_https": 0.05,
-        "suspicious_keywords": 0.10,
-        "excessive_subdomains": 0.10,
-        "long_url": 0.05,
-    }
-
-    SUSPICIOUS_URL_KEYWORDS = [
-        "login", "signin", "verify", "secure", "account", "update",
-        "confirm", "banking", "password", "credential", "auth",
-        "wallet", "payment", "invoice", "claim", "prize",
-    ]
 
     HOMOGRAPH_CHARS = {"а", "е", "о", "р", "с", "у", "х", "і", "ϲ"}
 
@@ -58,7 +40,7 @@ class URLPhishingDetector:
         ]
 
     def analyze(self, url: str) -> DetectionResult:
-        """Analyze a URL — legitimate .com/.io/.in/.ai sites are not flagged by default."""
+        """Analyze a URL for phishing — legitimate .com/.io/.in/.ai sites stay safe."""
         if not url.strip():
             return self._result(False, 0.0, [], {"note": "Empty URL"})
 
@@ -68,6 +50,7 @@ class URLPhishingDetector:
         parsed = urlparse(url)
         domain = normalize_domain(parsed.netloc.split(":")[0])
         url_lower = url.lower()
+        path_and_query = (parsed.path + parsed.query).lower()
 
         details: dict[str, Any] = {
             "domain": domain,
@@ -75,26 +58,17 @@ class URLPhishingDetector:
             "trusted_tld": is_trusted_tld(domain),
         }
 
-        # --- Layer 1: Known legitimate domain → SAFE ---
+        # Known whitelist → safe
         if is_known_legitimate(domain, self.legitimate_domains):
-            details["trust_reason"] = "Known legitimate domain or subdomain"
+            details["trust_reason"] = "Known legitimate domain"
             return self._result(False, 0.05, [], details)
 
-        strong: list[str] = []
-        weak: list[str] = []
+        # Domain-level analysis (typosquat, brand impersonation, etc.)
+        domain_result = analyze_domain(domain, self.legitimate_domains)
+        strong: list[str] = list(domain_result["rules"])
+        details.update(domain_result["details"])
 
-        # --- Strong signals (real phishing indicators) ---
-
-        brand_match = check_brand_typosquat(domain)
-        if brand_match:
-            strong.append("brand_typosquat")
-            details["mimics_brand"] = brand_match
-
-        edit_match = check_edit_distance_typosquat(domain, self.legitimate_domains)
-        if edit_match and "brand_typosquat" not in strong:
-            strong.append("edit_distance_typosquat")
-            details["similar_to"] = edit_match
-
+        # URL-specific strong signals
         if self._has_homograph(domain):
             strong.append("homograph_attack")
             details["homograph_detected"] = True
@@ -107,50 +81,29 @@ class URLPhishingDetector:
             strong.append("at_symbol_redirect")
             details["redirect_trick"] = True
 
-        keyword_hits = [kw for kw in self.SUSPICIOUS_URL_KEYWORDS if kw in url_lower]
+        keyword_hits = [kw for kw in PHISHING_PATH_KEYWORDS if kw in url_lower]
         if keyword_hits:
             details["keyword_hits"] = keyword_hits[:5]
 
         if is_suspicious_tld(domain) and keyword_hits:
-            strong.append("suspicious_tld_with_keywords")
-            details["suspicious_tld"] = True
+            if "suspicious_tld_with_keywords" not in strong:
+                strong.append("suspicious_tld_with_keywords")
 
-        # --- Weak signals (only meaningful with strong signals) ---
+        # Domain already marked safe on trusted TLD
+        if domain_result.get("details", {}).get("trust_reason") and not domain_result["is_phishing"]:
+            if not any(r in strong for r in ("homograph_attack", "ip_address_url", "at_symbol_redirect")):
+                return self._result(False, domain_result["confidence"], domain_result["rules"], details)
 
-        if is_suspicious_tld(domain) and "suspicious_tld_with_keywords" not in strong:
-            weak.append("suspicious_tld")
-
-        if parsed.scheme == "http" and not is_trusted_tld(domain):
-            weak.append("missing_https")
-
-        if keyword_hits and "suspicious_tld_with_keywords" not in strong:
-            weak.append("suspicious_keywords")
-
-        if len(domain.split(".")) > 4:
-            weak.append("excessive_subdomains")
-            details["subdomain_count"] = len(domain.split(".")) - 2
-
-        if len(url) > 180:
-            weak.append("long_url")
-
-        # DNS info only — never used alone to flag phishing
-        details["dns_resolves"] = self._check_dns(domain)
-
-        # --- Scoring ---
+        # Score
         strong_score = sum(self.STRONG_WEIGHTS.get(r, 0.4) for r in strong)
-        weak_score = sum(self.WEAK_WEIGHTS.get(r, 0.05) for r in weak) if strong else 0
+        domain_score = domain_result["confidence"]
+        total_score = min(max(strong_score, domain_score), 1.0)
 
-        # Trusted TLD (.com, .io, .in, .ai) without strong signals → safe
-        if is_trusted_tld(domain) and not strong:
-            details["trust_reason"] = f"Trusted TLD (.{details['tld']}) with no impersonation signals"
-            return self._result(False, min(weak_score, 0.25), weak, details)
+        is_phishing = domain_result["is_phishing"] or (
+            bool(strong) and total_score >= self.threshold
+        )
 
-        total_score = min(strong_score + weak_score, 1.0)
-        triggered = strong + (weak if strong else [])
-
-        is_phishing = bool(strong) and total_score >= self.threshold
-
-        return self._result(is_phishing, total_score, triggered, details)
+        return self._result(is_phishing, total_score, strong, details)
 
     def analyze_batch(self, urls: list[str]) -> list[dict]:
         results = []
@@ -169,10 +122,11 @@ class URLPhishingDetector:
     def _result(
         self, is_phishing: bool, score: float, rules: list[str], details: dict
     ) -> DetectionResult:
+        display_score = score if is_phishing else score * 0.4
         return DetectionResult(
             is_phishing=is_phishing,
             confidence=round(score, 3),
-            risk_level=DetectionResult.risk_from_score(score if is_phishing else score * 0.5),
+            risk_level=DetectionResult.risk_from_score(display_score),
             triggered_rules=rules,
             details=details,
         )

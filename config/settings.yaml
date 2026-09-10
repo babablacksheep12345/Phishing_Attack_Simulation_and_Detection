@@ -2,7 +2,7 @@
 
 detection:
   email:
-    phishing_threshold: 0.5
+    phishing_threshold: 0.45
     suspicious_keywords:
       - urgent
       - verify your account
