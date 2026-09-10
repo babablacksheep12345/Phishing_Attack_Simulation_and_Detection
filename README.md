@@ -202,6 +202,34 @@ RED FLAGS TO IDENTIFY:
 
 ---
 
+## Web App (Local)
+
+Run the web UI locally:
+
+```bash
+pip install -r requirements.txt
+streamlit run streamlit_app.py
+```
+
+Opens at `http://localhost:8501`
+
+---
+
+## Deploy Online (Streamlit Cloud — Free)
+
+1. Go to [share.streamlit.io](https://share.streamlit.io) and sign in with GitHub
+2. Click **New app**
+3. Select repository: `Shikha-Upadhyay13/Phishing_Attack_Simulation_and_Detection`
+4. Set **Main file path** to: `streamlit_app.py`
+5. Click **Deploy**
+
+Your live app URL will look like:
+`https://phishing-attack-simulation-and-detection.streamlit.app`
+
+Share this link on LinkedIn and in your internship submission email.
+
+---
+
 ## Publishing on GitHub
 
 1. Create a new repository on GitHub (e.g., `phishing-simulation-detection`)
