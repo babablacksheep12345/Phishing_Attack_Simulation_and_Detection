@@ -26,7 +26,8 @@ detection:
       - paypal.com
 
   url:
-    phishing_threshold: 0.5
+    phishing_threshold: 0.45
+    # Trusted TLDs (.com, .io, .in, .ai) are safe unless impersonation is detected
     suspicious_tlds:
       - .xyz
       - .top

@@ -189,14 +189,13 @@ simulator = EmailSimulator()
 scenario_gen = ScenarioGenerator()
 
 URL_DETECTION_RULES = [
-    ("Typosquatting", "Detects domains mimicking brands (paypa1.com, microsft-login.com)"),
-    ("Suspicious TLD", "Flags risky extensions like .xyz, .tk, .club"),
-    ("IP Address URL", "Sites using raw IP instead of a domain name"),
-    ("Homograph Attack", "Unicode characters that look like real letters"),
-    ("Missing HTTPS", "Non-encrypted HTTP connections"),
-    ("Suspicious Keywords", "login, verify, secure in untrusted domains"),
-    ("@ Symbol Redirect", "URL obfuscation tricks"),
-    ("DNS Check", "Domains that fail to resolve"),
+    ("Trusted TLDs (.com, .io, .in, .ai)", "Legitimate extensions are NOT flagged unless impersonation is found"),
+    ("Known Domains Whitelist", "Google, GitHub, PayPal, etc. and their subdomains are always safe"),
+    ("Brand Typosquatting", "Catches paypa1.com, microsft-login.com, g00gle-security.com"),
+    ("Suspicious TLD + Keywords", "Only flags .xyz/.tk domains that also have login/verify paths"),
+    ("IP Address URL", "Sites using raw IP instead of a real domain name"),
+    ("Homograph Attack", "Unicode lookalike characters in the domain"),
+    ("@ Symbol Redirect", "Hidden URL redirect tricks"),
 ]
 
 
@@ -429,7 +428,8 @@ elif page == "🔗 Fake Website Detector":
         unsafe_allow_html=True,
     )
 
-    st.info("💡 **Example:** `paypa1-secure.com` mimics PayPal using character substitution (1 → l)")
+    st.success("✅ **Safe by default:** `.com`, `.io`, `.in`, `.ai`, `.org` sites are trusted unless they impersonate a brand.")
+    st.warning("🚨 **Flagged when:** typosquatting (paypa1.com), suspicious TLD + login page (.xyz/verify), or IP-based URLs.")
 
     url_input = st.text_input(
         "Enter URL to analyze",

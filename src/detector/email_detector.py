@@ -3,11 +3,12 @@
 import re
 from typing import Any
 
-from src.utils.helpers import (
-    extract_email_addresses,
-    extract_urls,
-    levenshtein_distance,
-    normalize_domain,
+from src.utils.helpers import extract_urls, normalize_domain
+from .domain_trust import (
+    check_brand_typosquat,
+    check_edit_distance_typosquat,
+    is_known_legitimate,
+    is_suspicious_tld,
 )
 from .rules import DetectionResult, score_from_rules
 
@@ -69,6 +70,10 @@ class EmailPhishingDetector:
         self.trusted_domains = [
             normalize_domain(d) for d in email_cfg.get("trusted_domains", [])
         ]
+        self.url_whitelist = [
+            normalize_domain(d)
+            for d in self.config.get("detection", {}).get("url", {}).get("legitimate_domains", [])
+        ]
 
     def analyze(
         self,
@@ -114,14 +119,21 @@ class EmailPhishingDetector:
             triggered.append("urgency_keywords")
             details["urgency_matches"] = urgency_hits[:5]
 
-        # Rule 4: Suspicious URLs in body
+        # Rule 4: Suspicious URLs in body (skip known .com/.io/.in legitimate sites)
         urls = extract_urls(body)
         suspicious_urls = []
         for url in urls:
             url_domain = self._domain_from_url(url)
-            if url_domain and not self._is_trusted_or_subdomain(url_domain):
-                if self._looks_like_typosquat(url_domain) or self._has_suspicious_tld(url_domain):
-                    suspicious_urls.append(url)
+            if not url_domain:
+                continue
+            if is_known_legitimate(url_domain, self.url_whitelist + self.trusted_domains):
+                continue
+            if check_brand_typosquat(url_domain) or check_edit_distance_typosquat(
+                url_domain, self.url_whitelist
+            ):
+                suspicious_urls.append(url)
+            elif is_suspicious_tld(url_domain):
+                suspicious_urls.append(url)
         if suspicious_urls:
             triggered.append("suspicious_url_in_body")
             details["suspicious_urls"] = suspicious_urls
@@ -192,43 +204,16 @@ class EmailPhishingDetector:
         return False
 
     def _looks_like_typosquat(self, domain: str) -> bool:
-        """Detect typosquatting via character substitution and edit distance."""
-        substitutions = {"0": "o", "1": "l", "1": "i", "5": "s", "3": "e"}
-        normalized = domain
-        for char, replacement in substitutions.items():
-            normalized = normalized.replace(char, replacement)
-
-        for trusted in self.trusted_domains:
-            base = trusted.split(".")[0]
-            domain_base = normalized.split(".")[0]
-            if base in domain_base or domain_base in base:
-                if domain != trusted and levenshtein_distance(domain_base, base) <= 2:
-                    return True
-            if levenshtein_distance(domain_base, base) == 1:
-                return True
-
-        suspicious_patterns = [
-            r"secure-",
-            r"-verify",
-            r"-login",
-            r"-update",
-            r"-billing",
-            r"paypa[li]1",
-            r"micros[o0]ft",
-            r"g[o0]{2}gle",
-            r"amaz[o0]n",
-            r"app[li]e",
-            r"b[o0]{2}k",
-            r"quickb",
-            r"netfl[li]x",
-        ]
-        return any(re.search(p, domain, re.IGNORECASE) for p in suspicious_patterns)
-
-    def _has_suspicious_tld(self, domain: str) -> bool:
-        suspicious_tlds = self.config.get("detection", {}).get("url", {}).get(
-            "suspicious_tlds", [".xyz", ".top", ".club", ".tk", ".ml"]
-        )
-        return any(domain.endswith(tld) for tld in suspicious_tlds)
+        """Detect sender domain typosquatting (strict — avoids false positives)."""
+        if check_brand_typosquat(domain):
+            return True
+        if check_edit_distance_typosquat(domain, self.trusted_domains + self.url_whitelist):
+            return True
+        return bool(re.search(
+            r"(secure-|[-_]verify|[-_]login|paypa[li]1|micros[o0]ft|g[o0]{2}gle)",
+            domain,
+            re.IGNORECASE,
+        ))
 
     @staticmethod
     def _domain_from_url(url: str) -> str:
