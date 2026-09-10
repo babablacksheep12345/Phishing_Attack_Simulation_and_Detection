@@ -3,7 +3,7 @@
 Phishing Attack Simulation and Detection System
 ==================================================
 A security awareness tool that simulates phishing attacks and detects them
-using email filters and fake website detection.
+using email filters and website URL detection.
 
 FOR EDUCATIONAL AND AUTHORIZED SECURITY TESTING ONLY.
 """
@@ -104,7 +104,7 @@ def cmd_detect_email(args, config):
 
 
 def cmd_detect_url(args, config):
-    """Detect fake/phishing URLs."""
+    """Detect phishing URLs."""
     detector = URLPhishingDetector(config)
     urls = args.urls or []
 
@@ -245,7 +245,7 @@ Examples:
     email_parser.add_argument("--display", type=str, help="Sender display name")
 
     # Detect URL command
-    url_parser = subparsers.add_parser("detect-url", help="Detect fake/phishing URLs")
+    url_parser = subparsers.add_parser("detect-url", help="Detect phishing URLs")
     url_parser.add_argument("--urls", nargs="+", help="URLs to analyze")
     url_parser.add_argument("--file", type=str, help="JSON file with URLs")
 

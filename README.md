@@ -1,6 +1,6 @@
 # Phishing Attack Simulation and Detection
 
-A Python-based security awareness project that **simulates phishing attacks** for training and **detects phishing** through email filters and fake website analysis.
+A Python-based security awareness project that **simulates phishing attacks** for training and **detects phishing** through email filters and website URL analysis.
 
 > **Educational Use Only** — This tool is designed for cybersecurity learning, authorized security awareness training, and defensive research. Never use simulated phishing content for unauthorized attacks.
 
@@ -12,14 +12,14 @@ A Python-based security awareness project that **simulates phishing attacks** fo
 |-----------|-------------|
 | **Phishing Simulator** | Generates realistic phishing email scenarios (credential harvest, fake invoice, account suspension, prize scam, tech support) |
 | **Email Detector** | Rule-based email filter detecting urgency language, typosquatting, suspicious URLs, display name mismatches |
-| **URL Detector** | Fake website detection via typosquatting, suspicious TLDs, homograph attacks, IP-based URLs, DNS checks |
+| **URL Detector** | Website detection via typosquatting, suspicious TLDs, homograph attacks, IP-based URLs, DNS checks |
 | **Reporting** | JSON + HTML reports with detection confidence scores and triggered rules |
 
 ### Skills Demonstrated
 
 - Phishing attack techniques and social engineering patterns
 - Email security filtering and heuristic analysis
-- Fake website / malicious URL detection
+- Website / malicious URL detection
 - Security awareness training workflow
 - Python application development and CLI tooling
 
@@ -129,7 +129,7 @@ python main.py detect-email \
   --body "Dear User, verify at http://paypa1-secure.com/login"
 ```
 
-### Detect Fake/Malicious URLs
+### Detect Malicious URLs
 
 ```bash
 python main.py detect-url --urls http://paypa1-secure.com/login http://microsft-login.com
@@ -154,7 +154,7 @@ python main.py detect-url --file data/sample_phishing_urls.json
 | Excessive caps | ALL CAPS subject lines |
 | Reply-to mismatch | Reply-to domain differs from sender |
 
-### URL / Fake Website Detection
+### URL / Website Detection
 
 | Rule | Description |
 |------|-------------|

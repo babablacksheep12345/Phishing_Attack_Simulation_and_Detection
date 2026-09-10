@@ -450,7 +450,7 @@ NAV_ITEMS = [
     "🏠 Dashboard",
     "📧 Simulate",
     "✉️ Email Detector",
-    "🔗 Fake Website Detector",
+    "🔗 Website Detector",
     "🚀 Full Demo",
 ]
 
@@ -466,7 +466,7 @@ URL_DETECTION_RULES = [
 
 
 def render_hero(subtitle: str | None = None):
-    text = subtitle or "Simulate phishing attacks for awareness training and detect fake emails & malicious websites in real time."
+    text = subtitle or "Simulate phishing attacks for awareness training and detect phishing emails & malicious websites in real time."
     st.markdown(
         f"""
         <div class="hero">
@@ -511,7 +511,7 @@ def render_rule_chips(rules: list[str], danger: bool = True):
 def render_detection_result(result):
     is_bad = result.is_phishing
     box_class = "verdict-danger" if is_bad else "verdict-safe"
-    verdict_text = "PHISHING / FAKE WEBSITE DETECTED" if is_bad else "APPEARS LEGITIMATE"
+    verdict_text = "PHISHING / MALICIOUS WEBSITE DETECTED" if is_bad else "APPEARS LEGITIMATE"
     icon = "🚨" if is_bad else "✅"
 
     st.markdown(
@@ -615,13 +615,13 @@ if page == "🏠 Dashboard":
     for col, title, desc in [
         (col1, "📧 Phishing Simulator", "Generate credential theft, fake invoice, prize scam & more."),
         (col2, "✉️ Email Detector", "Scan for urgency, spoofed senders, typosquat domains & bad links."),
-        (col3, "🔗 Fake Website Detector", "Catch typosquatted URLs, suspicious TLDs & phishing pages."),
+        (col3, "🔗 Website Detector", "Catch typosquatted URLs, suspicious TLDs & phishing pages."),
     ]:
         with col:
             st.markdown(f'<div class="feature-card"><h4>{title}</h4><p>{desc}</p></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<p class="section-title">How Fake Website Detection Works</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">How Website Detection Works</p>', unsafe_allow_html=True)
     st.markdown('<p class="section-sub">Smart layered analysis — trusted domains stay safe, impersonators get caught.</p>', unsafe_allow_html=True)
 
     cols = st.columns(2)
@@ -674,10 +674,10 @@ elif page == "✉️ Email Detector":
         render_detection_result(email_detector.analyze(subject, body, from_address, from_display))
     st.markdown('</div>', unsafe_allow_html=True)
 
-elif page == "🔗 Fake Website Detector":
-    render_hero("Check any URL before you click — catch fake login pages and typosquatted domains.")
+elif page == "🔗 Website Detector":
+    render_hero("Check any URL before you click — catch phishing login pages and typosquatted domains.")
     st.markdown('<div class="content-panel">', unsafe_allow_html=True)
-    st.markdown('<p class="section-title">Fake Website / URL Detector</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Website / URL Detector</p>', unsafe_allow_html=True)
 
     st.markdown('<div class="alert-safe">✅ <b>Safe by default:</b> .com, .io, .in, .ai, .org sites are trusted unless they impersonate a brand.</div>', unsafe_allow_html=True)
     st.markdown('<div class="alert-warn">🚨 <b>Flagged when:</b> typosquatting (paypa1.com), suspicious TLD + login (.xyz/verify), or IP-based URLs.</div>', unsafe_allow_html=True)
@@ -739,7 +739,7 @@ elif page == "🚀 Full Demo":
                 r = url_detector.analyze(url)
                 url_hits += r.is_phishing
                 color = "#ef4444" if r.is_phishing else "#22c55e"
-                label = "FAKE" if r.is_phishing else "SAFE"
+                label = "PHISHING" if r.is_phishing else "SAFE"
                 st.markdown(f"`{url}` — <span style='color:{color};font-weight:700'>{label}</span> ({r.confidence:.0%})", unsafe_allow_html=True)
 
             m1, m2, m3 = st.columns(3)

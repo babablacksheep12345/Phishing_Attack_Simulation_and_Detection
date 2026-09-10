@@ -1,4 +1,4 @@
-"""Fake website and malicious URL detection with trusted-domain awareness."""
+"""Website and malicious URL detection with trusted-domain awareness."""
 
 import re
 import socket
@@ -18,7 +18,7 @@ from .rules import DetectionResult
 
 class URLPhishingDetector:
     """
-    Detects fake/phishing websites using layered analysis:
+    Detects phishing websites using layered analysis:
     1. Known legitimate domains (.com, .io, etc.) → safe
     2. Strong signals (typosquat, homograph, IP URLs) → phishing
     3. Weak signals only count when combined with strong ones
